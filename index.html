@@ -26,39 +26,23 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Mock data pre demo
-        const mockActivities = [
-            {
-                id: 1,
-                name: "Ranný beh",
-                distance: 5000,
-                duration: 1800,
-                started_at: "2025-07-27T07:00:00",
-                notes: "Perfektne ráno pre beh!"
-            },
-            {
-                id: 2,
-                name: "Večerný cyklistický výlet",
-                distance: 15000,
-                duration: 2700,
-                started_at: "2025-07-26T18:30:00",
-                notes: "Krásna trasa cez les"
-            },
-            {
-                id: 3,
-                name: "Jogga v parku",
-                distance: 3200,
-                duration: 1200,
-                started_at: "2025-07-25T06:45:00",
-                notes: ""
-            }
-        ];
+        // Backend URL - zmeniť podľa potreby
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:8000' 
+            : 'https://your-laravel-backend.herokuapp.com'; // nahradiť skutočnou URL
+
+        // Axios nastavenie
+        axios.defaults.withCredentials = true;
+        axios.defaults.headers.common['Accept'] = 'application/json';
+        axios.defaults.headers.common['Content-Type'] = 'application/json';
 
         function Activities({ user, onLogout }) {
-            const [activities, setActivities] = useState(mockActivities);
+            const [activities, setActivities] = useState([]);
             const [deletingIds, setDeletingIds] = useState(new Set());
             const [showForm, setShowForm] = useState(false);
             const [isSubmitting, setIsSubmitting] = useState(false);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState('');
             const [form, setForm] = useState({
                 name: '',
                 distance: '',
@@ -66,6 +50,24 @@
                 started_at: '',
                 notes: ''
             });
+
+            useEffect(() => {
+                fetchActivities();
+            }, []);
+
+            const fetchActivities = async () => {
+                try {
+                    setLoading(true);
+                    const response = await axios.get(`${API_BASE_URL}/activities`);
+                    setActivities(response.data);
+                    setError('');
+                } catch (error) {
+                    console.error("Chyba pri načítavaní aktivít!", error);
+                    setError('Chyba pri načítavaní aktivít. Skúste to znovu.');
+                } finally {
+                    setLoading(false);
+                }
+            };
 
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
@@ -75,39 +77,50 @@
                 }));
             };
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
                 
-                setTimeout(() => {
-                    const newActivity = {
-                        id: Date.now(),
+                try {
+                    const activityData = {
                         name: form.name,
-                        distance: parseInt(form.distance, 10) * 1000,
-                        duration: parseInt(form.duration, 10) * 60,
+                        distance: parseInt(form.distance, 10) * 1000, // km na metre
+                        duration: parseInt(form.duration, 10) * 60, // minúty na sekundy
                         started_at: form.started_at,
                         notes: form.notes
                     };
                     
-                    setActivities(prev => [newActivity, ...prev]);
+                    const response = await axios.post(`${API_BASE_URL}/activities`, activityData);
+                    setActivities(prev => [response.data, ...prev]);
                     setForm({ name: '', distance: '', duration: '', started_at: '', notes: '' });
                     setShowForm(false);
+                    setError('');
+                } catch (error) {
+                    console.error("Chyba pri vytváraní aktivity!", error);
+                    setError('Chyba pri vytváraní aktivity. Skúste to znovu.');
+                } finally {
                     setIsSubmitting(false);
-                }, 1000);
+                }
             };
 
-            const handleDelete = (id) => {
+            const handleDelete = async (id) => {
                 if (confirm('Ste si istí, že chcete vymazať túto aktivitu?')) {
                     setDeletingIds(prev => new Set(prev).add(id));
                     
-                    setTimeout(() => {
+                    try {
+                        await axios.delete(`${API_BASE_URL}/activities/${id}`);
                         setActivities(prev => prev.filter(activity => activity.id !== id));
+                        setError('');
+                    } catch (error) {
+                        console.error("Chyba pri mazaní aktivity!", error);
+                        setError('Chyba pri mazaní aktivity. Skúste to znovu.');
+                    } finally {
                         setDeletingIds(prev => {
                             const newSet = new Set(prev);
                             newSet.delete(id);
                             return newSet;
                         });
-                    }, 500);
+                    }
                 }
             };
 
@@ -358,7 +371,38 @@
                             <div className="space-y-4">
                                 <h2 className="text-2xl font-bold text-white">Posledné aktivity</h2>
                                 
-                                <div className="grid gap-4 sm:gap-6">
+                                {error && (
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                                        {error}
+                                    </div>
+                                )}
+                                
+                                {loading ? (
+                                    <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 text-center shadow-lg border border-white/20">
+                                        <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l-3-2.647z"></path>
+                                        </svg>
+                                        <p className="text-gray-600">Načítavam aktivity...</p>
+                                    </div>
+                                ) : activities.length === 0 ? (
+                                    <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 text-center shadow-lg border border-white/20">
+                                        <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <h3 className="text-lg font-medium text-gray-900 mb-2">Žiadne aktivity</h3>
+                                        <p className="text-gray-500 mb-4">Začnite sledovať svoje tréningy pridaním prvej aktivity.</p>
+                                        <button
+                                            onClick={() => setShowForm(true)}
+                                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200"
+                                        >
+                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Pridať prvú aktivitu
+                                        </button>
+                                    </div>
+                                ) : (
                                     {activities.map(activity => (
                                         <div key={activity.id} className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition duration-200">
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -442,17 +486,7 @@
                                             </div>
                                         </div>
                                     ))}
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="text-center mt-12 pt-8 border-t border-white/20">
-                                <p className="text-white/60">
-                                    © 2025 Runix - Demo aplikácia vytvorená s Laravel + React
-                                </p>
-                                <p className="text-white/40 text-sm mt-2">
-                                    Toto je statická demo verzia. Plná aplikácia obsahuje backend a databázu.
-                                </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -464,79 +498,119 @@
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [currentUser, setCurrentUser] = useState(null);
             const [showRegister, setShowRegister] = useState(false);
-            const [users, setUsers] = useState(() => {
-                // Načítať používateľov z localStorage
-                const savedUsers = localStorage.getItem('runix_users');
-                return savedUsers ? JSON.parse(savedUsers) : [];
-            });
+            const [loading, setLoading] = useState(true);
 
-            const handleLogin = (email, password) => {
-                const user = users.find(u => u.email === email && u.password === password);
-                if (user) {
-                    setCurrentUser(user);
-                    setIsLoggedIn(true);
-                    localStorage.setItem('runix_current_user', JSON.stringify(user));
-                } else {
-                    alert('Nesprávne prihlasovacie údaje.');
-                }
-            };
-
-            const handleRegister = (name, email, password) => {
-                // Kontrola či už používateľ existuje
-                if (users.find(u => u.email === email)) {
-                    alert('Používateľ s týmto emailom už existuje.');
-                    return;
-                }
-
-                const newUser = { 
-                    id: Date.now(),
-                    name, 
-                    email, 
-                    password 
-                };
-                
-                const updatedUsers = [...users, newUser];
-                setUsers(updatedUsers);
-                localStorage.setItem('runix_users', JSON.stringify(updatedUsers));
-                
-                // Automaticky prihlásiť po registrácii
-                setCurrentUser(newUser);
-                setIsLoggedIn(true);
-                localStorage.setItem('runix_current_user', JSON.stringify(newUser));
-                setShowRegister(false);
-            };
-
-            const handleLogout = () => {
-                setCurrentUser(null);
-                setIsLoggedIn(false);
-                localStorage.removeItem('runix_current_user');
-            };
-
-            // Kontrola či je používateľ už prihlásený
-            React.useEffect(() => {
-                const savedUser = localStorage.getItem('runix_current_user');
-                if (savedUser) {
-                    setCurrentUser(JSON.parse(savedUser));
-                    setIsLoggedIn(true);
-                }
+            useEffect(() => {
+                checkAuth();
             }, []);
 
+            const checkAuth = async () => {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/user`);
+                    setCurrentUser(response.data);
+                    setIsLoggedIn(true);
+                } catch (error) {
+                    console.log('Používateľ nie je prihlásený');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogin = async (email, password) => {
+                try {
+                    // CSRF cookie
+                    await axios.get(`${API_BASE_URL}/sanctum/csrf-cookie`);
+                    
+                    const response = await axios.post(`${API_BASE_URL}/login`, {
+                        email,
+                        password
+                    });
+                    
+                    // Načítaj údaje o používateľovi
+                    const userResponse = await axios.get(`${API_BASE_URL}/user`);
+                    setCurrentUser(userResponse.data);
+                    setIsLoggedIn(true);
+                    return { success: true };
+                } catch (error) {
+                    console.error('Chyba pri prihlásení:', error);
+                    return { 
+                        success: false, 
+                        message: error.response?.data?.message || 'Chyba pri prihlásení' 
+                    };
+                }
+            };
+
+            const handleRegister = async (name, email, password, passwordConfirmation) => {
+                try {
+                    // CSRF cookie
+                    await axios.get(`${API_BASE_URL}/sanctum/csrf-cookie`);
+                    
+                    const response = await axios.post(`${API_BASE_URL}/register`, {
+                        name,
+                        email,
+                        password,
+                        password_confirmation: passwordConfirmation
+                    });
+                    
+                    // Automaticky prihlásiť po registrácii
+                    const userResponse = await axios.get(`${API_BASE_URL}/user`);
+                    setCurrentUser(userResponse.data);
+                    setIsLoggedIn(true);
+                    return { success: true };
+                } catch (error) {
+                    console.error('Chyba pri registrácii:', error);
+                    return { 
+                        success: false, 
+                        message: error.response?.data?.message || 'Chyba pri registrácii',
+                        errors: error.response?.data?.errors || {}
+                    };
+                }
+            };
+
+            const handleLogout = async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/logout`);
+                } catch (error) {
+                    console.log('Chyba pri odhlásení');
+                } finally {
+                    setCurrentUser(null);
+                    setIsLoggedIn(false);
+                }
+            };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-white text-xl">Načítavam...</div>
+                    </div>
+                );
+            }
+
             if (!isLoggedIn) {
-                return showRegister ? 
-                    <RegisterForm onRegister={handleRegister} onShowLogin={() => setShowRegister(false)} /> :
-                    <LoginForm onLogin={handleLogin} onShowRegister={() => setShowRegister(true)} />;
+                return showRegister 
+                    ? <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => setShowRegister(false)} />
+                    : <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setShowRegister(true)} />;
             }
 
             return <Activities user={currentUser} onLogout={handleLogout} />;
         }
 
-        function LoginForm({ onLogin }) {
+        function LoginForm({ onLogin, onSwitchToRegister }) {
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
-                onLogin(email, password);
+                setLoading(true);
+                setError('');
+                
+                const result = await onLogin(email, password);
+                if (!result.success) {
+                    setError(result.message);
+                }
+                setLoading(false);
             };
 
             return (
@@ -555,6 +629,12 @@
                                 <p className="text-gray-600 mt-2">Prihlásenie do aplikácie</p>
                             </div>
 
+                            {error && (
+                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                    {error}
+                                </div>
+                            )}
+
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -568,7 +648,7 @@
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                                        placeholder="test@runix.com"
+                                        placeholder="vas@email.com"
                                     />
                                 </div>
 
@@ -584,21 +664,169 @@
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                                        placeholder="password123"
+                                        placeholder="••••••••"
                                     />
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-200"
+                                    disabled={loading}
+                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-200 disabled:opacity-50"
                                 >
-                                    Prihlásiť sa
+                                    {loading ? 'Prihlasuje...' : 'Prihlásiť sa'}
                                 </button>
 
-                                <div className="text-center text-sm text-gray-600 mt-4 p-4 bg-blue-50 rounded-lg">
-                                    <p><strong>Demo údaje:</strong></p>
-                                    <p>Email: test@runix.com</p>
-                                    <p>Heslo: password123</p>
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={onSwitchToRegister}
+                                        className="text-blue-600 hover:text-blue-500 font-medium"
+                                    >
+                                        Nemáte účet? Zaregistrujte sa
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RegisterForm({ onRegister, onSwitchToLogin }) {
+            const [name, setName] = useState('');
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [passwordConfirmation, setPasswordConfirmation] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [errors, setErrors] = useState({});
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                setErrors({});
+                
+                const result = await onRegister(name, email, password, passwordConfirmation);
+                if (!result.success) {
+                    setError(result.message);
+                    setErrors(result.errors || {});
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-md w-full space-y-8">
+                        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+                            <div className="text-center mb-8">
+                                <div className="flex items-center justify-center mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h2 className="text-3xl font-bold text-gray-900">Runix</h2>
+                                <p className="text-gray-600 mt-2">Vytvorenie nového účtu</p>
+                            </div>
+
+                            {error && (
+                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Meno
+                                    </label>
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
+                                        placeholder="Vaše meno"
+                                    />
+                                    {errors.name && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.name[0]}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Email
+                                    </label>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${errors.email ? 'border-red-300' : 'border-gray-300'}`}
+                                        placeholder="vas@email.com"
+                                    />
+                                    {errors.email && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.email[0]}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Heslo
+                                    </label>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${errors.password ? 'border-red-300' : 'border-gray-300'}`}
+                                        placeholder="••••••••"
+                                    />
+                                    {errors.password && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.password[0]}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Potvrdenie hesla
+                                    </label>
+                                    <input
+                                        id="password_confirmation"
+                                        name="password_confirmation"
+                                        type="password"
+                                        required
+                                        value={passwordConfirmation}
+                                        onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-200 disabled:opacity-50"
+                                >
+                                    {loading ? 'Registruje...' : 'Zaregistrovať sa'}
+                                </button>
+
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={onSwitchToLogin}
+                                        className="text-blue-600 hover:text-blue-500 font-medium"
+                                    >
+                                        Máte už účet? Prihláste sa
+                                    </button>
                                 </div>
                             </form>
                         </div>
