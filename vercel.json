@@ -8,6 +8,11 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/index.php?path=$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
-  ]
+  ],
+  "outputDirectory": "public"
 }
