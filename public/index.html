@@ -26,10 +26,12 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Backend URL - zmeniť podľa potreby
+        // Backend URL - prepojenie na produkčnú Laravel aplikáciu
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:8000' 
-            : 'https://your-laravel-backend.herokuapp.com'; // nahradiť skutočnou URL
+            : 'https://runix-production.up.railway.app'; // Produkčná URL
+        
+        console.log('Connecting to API:', API_BASE_URL);
 
         // Axios nastavenie
         axios.defaults.withCredentials = true;
