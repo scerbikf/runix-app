@@ -2,13 +2,17 @@
 nixPkgs = ["php81", "php81Packages.composer", "nodejs_18"]
 
 [phases.install]
-cmds = ["composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs"]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs",
+    "touch database/database.sqlite"
+]
 
 [phases.build]
 cmds = [
     "php artisan config:cache",
     "php artisan route:cache", 
-    "php artisan view:cache"
+    "php artisan view:cache",
+    "php artisan migrate --force"
 ]
 
 [start]
