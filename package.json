@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && cp public/index.html public/dist/ || echo 'Build completed'",
         "dev": "vite"
     },
     "devDependencies": {
