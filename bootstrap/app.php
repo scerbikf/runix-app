@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Add CORS middleware
+        $middleware->web(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
         // Temporarily disable CSRF protection for development
         $middleware->validateCsrfTokens(except: [
             '*', // Disable CSRF for all routes

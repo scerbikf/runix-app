@@ -23,6 +23,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // API route pre aktuálneho používateľa
+    Route::get('/user', function () {
+        return auth()->user();
+    });
+
     Route::apiResource('activities', ActivityController::class)->parameters([
         'activities' => 'activity'
     ]);

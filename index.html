@@ -463,24 +463,68 @@
         function App() {
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [currentUser, setCurrentUser] = useState(null);
+            const [showRegister, setShowRegister] = useState(false);
+            const [users, setUsers] = useState(() => {
+                // Načítať používateľov z localStorage
+                const savedUsers = localStorage.getItem('runix_users');
+                return savedUsers ? JSON.parse(savedUsers) : [];
+            });
 
             const handleLogin = (email, password) => {
-                // Demo login - v skutočnej aplikácii by to bolo cez API
-                if (email === 'test@runix.com' && password === 'password123') {
-                    setCurrentUser({ name: 'Test User', email: email });
+                const user = users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    setCurrentUser(user);
                     setIsLoggedIn(true);
+                    localStorage.setItem('runix_current_user', JSON.stringify(user));
                 } else {
-                    alert('Nesprávne prihlasovacie údaje. Skúste: test@runix.com / password123');
+                    alert('Nesprávne prihlasovacie údaje.');
                 }
+            };
+
+            const handleRegister = (name, email, password) => {
+                // Kontrola či už používateľ existuje
+                if (users.find(u => u.email === email)) {
+                    alert('Používateľ s týmto emailom už existuje.');
+                    return;
+                }
+
+                const newUser = { 
+                    id: Date.now(),
+                    name, 
+                    email, 
+                    password 
+                };
+                
+                const updatedUsers = [...users, newUser];
+                setUsers(updatedUsers);
+                localStorage.setItem('runix_users', JSON.stringify(updatedUsers));
+                
+                // Automaticky prihlásiť po registrácii
+                setCurrentUser(newUser);
+                setIsLoggedIn(true);
+                localStorage.setItem('runix_current_user', JSON.stringify(newUser));
+                setShowRegister(false);
             };
 
             const handleLogout = () => {
                 setCurrentUser(null);
                 setIsLoggedIn(false);
+                localStorage.removeItem('runix_current_user');
             };
 
+            // Kontrola či je používateľ už prihlásený
+            React.useEffect(() => {
+                const savedUser = localStorage.getItem('runix_current_user');
+                if (savedUser) {
+                    setCurrentUser(JSON.parse(savedUser));
+                    setIsLoggedIn(true);
+                }
+            }, []);
+
             if (!isLoggedIn) {
-                return <LoginForm onLogin={handleLogin} />;
+                return showRegister ? 
+                    <RegisterForm onRegister={handleRegister} onShowLogin={() => setShowRegister(false)} /> :
+                    <LoginForm onLogin={handleLogin} onShowRegister={() => setShowRegister(true)} />;
             }
 
             return <Activities user={currentUser} onLogout={handleLogout} />;
