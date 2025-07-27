@@ -54,7 +54,7 @@
             }
         ];
 
-        function Activities() {
+        function Activities({ user, onLogout }) {
             const [activities, setActivities] = useState(mockActivities);
             const [deletingIds, setDeletingIds] = useState(new Set());
             const [showForm, setShowForm] = useState(false);
@@ -131,13 +131,32 @@
                 <div className="min-h-screen py-6 sm:py-12">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         {/* Header */}
+                        <div className="flex justify-between items-center mb-8">
+                            <div className="text-center flex-1">
+                                <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+                                    🏃‍♂️ Runix
+                                </h1>
+                                <p className="text-xl text-white/80 mb-2">
+                                    Sports Activity Tracker
+                                </p>
+                                <p className="text-white/60">
+                                    Vítajte, {user?.name || 'používateľ'}!
+                                </p>
+                            </div>
+                            <div className="ml-4">
+                                <button
+                                    onClick={onLogout}
+                                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg backdrop-blur-md transition duration-200 flex items-center space-x-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span>Odhlásiť</span>
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div className="text-center mb-8">
-                            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                                🏃‍♂️ Runix
-                            </h1>
-                            <p className="text-xl text-white/80 mb-2">
-                                Sports Activity Tracker
-                            </p>
                             <p className="text-white/60">
                                 Demo aplikácia pre sledovanie športových aktivít
                             </p>
@@ -442,7 +461,106 @@
         }
 
         function App() {
-            return <Activities />;
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [currentUser, setCurrentUser] = useState(null);
+
+            const handleLogin = (email, password) => {
+                // Demo login - v skutočnej aplikácii by to bolo cez API
+                if (email === 'test@runix.com' && password === 'password123') {
+                    setCurrentUser({ name: 'Test User', email: email });
+                    setIsLoggedIn(true);
+                } else {
+                    alert('Nesprávne prihlasovacie údaje. Skúste: test@runix.com / password123');
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                setIsLoggedIn(false);
+            };
+
+            if (!isLoggedIn) {
+                return <LoginForm onLogin={handleLogin} />;
+            }
+
+            return <Activities user={currentUser} onLogout={handleLogout} />;
+        }
+
+        function LoginForm({ onLogin }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onLogin(email, password);
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-md w-full space-y-8">
+                        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+                            <div className="text-center mb-8">
+                                <div className="flex items-center justify-center mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h2 className="text-3xl font-bold text-gray-900">Runix</h2>
+                                <p className="text-gray-600 mt-2">Prihlásenie do aplikácie</p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Email
+                                    </label>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                        placeholder="test@runix.com"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Heslo
+                                    </label>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                        placeholder="password123"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-200"
+                                >
+                                    Prihlásiť sa
+                                </button>
+
+                                <div className="text-center text-sm text-gray-600 mt-4 p-4 bg-blue-50 rounded-lg">
+                                    <p><strong>Demo údaje:</strong></p>
+                                    <p>Email: test@runix.com</p>
+                                    <p>Heslo: password123</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
         }
 
         ReactDOM.render(<App />, document.getElementById('root'));
