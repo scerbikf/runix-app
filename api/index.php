@@ -93,17 +93,6 @@ switch ($method) {
         } elseif ($path === 'sanctum/csrf-cookie') {
             // Fake CSRF endpoint for compatibility
             echo json_encode(['success' => true]);
-        } elseif ($path === 'clear-session') {
-            // Endpoint na vyčistenie session - len pre debug
-            clearCurrentUser();
-            // Vyčistiť aj súbory
-            $files = ['/tmp/session.json', '/tmp/users.json', '/tmp/activities.json'];
-            foreach ($files as $file) {
-                if (file_exists($file)) {
-                    unlink($file);
-                }
-            }
-            echo json_encode(['message' => 'Session cleared']);
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'Not found']);
