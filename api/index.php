@@ -81,7 +81,22 @@ switch ($method) {
                 echo json_encode(['error' => 'Unauthorized']);
                 break;
             }
-            echo json_encode(loadActivities());
+            // Check for active tracking
+            $activities = loadActivities();
+            $activeActivity = null;
+            foreach ($activities as $activity) {
+                if (isset($activity['is_tracking']) && $activity['is_tracking'] && $activity['user_id'] == $user['id']) {
+                    $startTime = strtotime($activity['tracking_started_at']);
+                    $activity['current_duration'] = time() - $startTime;
+                    $activeActivity = $activity;
+                    break;
+                }
+            }
+            
+            echo json_encode([
+                'activities' => $activities,
+                'activeTracking' => $activeActivity
+            ]);
         } elseif ($path === 'user') {
             $user = getCurrentUser();
             if (!$user) {
@@ -90,6 +105,34 @@ switch ($method) {
                 break;
             }
             echo json_encode($user);
+        } elseif ($path === 'activities/active-tracking') {
+            $user = getCurrentUser();
+            if (!$user) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthorized']);
+                break;
+            }
+            
+            $activities = loadActivities();
+            $activeActivity = null;
+            
+            foreach ($activities as $activity) {
+                if (isset($activity['is_tracking']) && $activity['is_tracking'] && $activity['user_id'] == $user['id']) {
+                    // Calculate current duration
+                    $startTime = strtotime($activity['tracking_started_at']);
+                    $activity['current_duration'] = time() - $startTime;
+                    $activeActivity = $activity;
+                    break;
+                }
+            }
+            
+            if (!$activeActivity) {
+                http_response_code(404);
+                echo json_encode(['message' => 'No active tracking found']);
+                break;
+            }
+            
+            echo json_encode($activeActivity);
         } elseif ($path === 'sanctum/csrf-cookie') {
             // Fake CSRF endpoint for compatibility
             echo json_encode(['success' => true]);
@@ -127,6 +170,122 @@ switch ($method) {
             saveActivities($activities);
             
             echo json_encode($newActivity);
+        } elseif ($path === 'activities/start-tracking') {
+            $user = getCurrentUser();
+            if (!$user) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthorized']);
+                break;
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $activities = loadActivities();
+            
+            // Stop any existing tracking first
+            foreach ($activities as &$activity) {
+                if (isset($activity['is_tracking']) && $activity['is_tracking']) {
+                    $activity['is_tracking'] = false;
+                }
+            }
+            
+            $newActivity = [
+                'id' => time(),
+                'name' => $input['name'],
+                'distance' => 0,
+                'duration' => 0,
+                'started_at' => date('Y-m-d H:i:s'),
+                'notes' => '',
+                'user_id' => $user['id'],
+                'is_tracking' => true,
+                'tracking_started_at' => date('Y-m-d H:i:s'),
+                'current_distance' => 0,
+                'ended_at' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            array_unshift($activities, $newActivity);
+            saveActivities($activities);
+            
+            echo json_encode($newActivity);
+        } elseif ($path === 'activities/stop-tracking') {
+            $user = getCurrentUser();
+            if (!$user) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthorized']);
+                break;
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $activities = loadActivities();
+            
+            // Find active tracking
+            $activeActivity = null;
+            foreach ($activities as &$activity) {
+                if (isset($activity['is_tracking']) && $activity['is_tracking'] && $activity['user_id'] == $user['id']) {
+                    $activity['is_tracking'] = false;
+                    $activity['ended_at'] = date('Y-m-d H:i:s');
+                    
+                    // Calculate duration
+                    $startTime = strtotime($activity['tracking_started_at']);
+                    $endTime = time();
+                    $activity['duration'] = $endTime - $startTime;
+                    
+                    // Set final distance
+                    if (isset($input['distance'])) {
+                        $activity['current_distance'] = $input['distance'];
+                        $activity['distance'] = $input['distance'] * 1000; // Convert to meters
+                    }
+                    
+                    // Set notes
+                    if (isset($input['notes'])) {
+                        $activity['notes'] = $input['notes'];
+                    }
+                    
+                    $activeActivity = $activity;
+                    break;
+                }
+            }
+            
+            if (!$activeActivity) {
+                http_response_code(404);
+                echo json_encode(['message' => 'No active tracking found']);
+                break;
+            }
+            
+            saveActivities($activities);
+            echo json_encode($activeActivity);
+        } elseif ($path === 'activities/update-tracking') {
+            $user = getCurrentUser();
+            if (!$user) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthorized']);
+                break;
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $activities = loadActivities();
+            
+            // Find active tracking
+            $activeActivity = null;
+            foreach ($activities as &$activity) {
+                if (isset($activity['is_tracking']) && $activity['is_tracking'] && $activity['user_id'] == $user['id']) {
+                    if (isset($input['distance'])) {
+                        $activity['current_distance'] = $input['distance'];
+                    }
+                    $activeActivity = $activity;
+                    break;
+                }
+            }
+            
+            if (!$activeActivity) {
+                http_response_code(404);
+                echo json_encode(['message' => 'No active tracking found']);
+                break;
+            }
+            
+            saveActivities($activities);
+            echo json_encode($activeActivity);
         } elseif ($path === 'register') {
             $input = json_decode(file_get_contents('php://input'), true);
             
