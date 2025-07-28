@@ -753,6 +753,9 @@
                         </div>
                     </header>
 
+                    {/* Separator Line */}
+                    <div className="border-b border-gray-200"></div>
+
                     {/* Main Content */}
                     <main className="py-6 sm:py-12">
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
@@ -761,9 +764,9 @@
                                 <div className="flex justify-center mb-8">
                                     <button
                                         onClick={() => setShowStartModal(true)}
-                                        className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 transform hover:scale-105"
+                                        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 transform hover:scale-105"
                                     >
-                                        🏃‍♂️ Spustiť
+                                        Spustiť
                                     </button>
                                 </div>
                             )}
@@ -977,7 +980,7 @@
                             )}
 
                             {/* Activities List */}
-                            <div className="mb-8">
+                            <div className="mb-8 mt-8">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Posledné aktivity</h2>
                                 
                                 {error && (
