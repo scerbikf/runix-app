@@ -362,35 +362,35 @@
             };
 
             return (
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 shadow-lg text-white mb-6">
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 mb-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold">🔴 {activeTracking?.name}</h3>
+                        <h3 className="text-xl font-bold text-gray-900">🔴 {activeTracking?.name}</h3>
                         <button
                             onClick={handleStop}
-                            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition duration-200"
+                            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold text-white transition duration-200"
                         >
                             STOP
                         </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="bg-white/10 rounded-lg p-4">
-                            <div className="text-sm text-green-100 mb-1">Čas</div>
-                            <div className="text-2xl font-mono font-bold">{formatTime(currentTime)}</div>
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <div className="text-sm text-blue-600 mb-1">Čas</div>
+                            <div className="text-2xl font-mono font-bold text-gray-900">{formatTime(currentTime)}</div>
                         </div>
 
-                        <div className="bg-white/10 rounded-lg p-4">
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                             <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm text-green-100">Vzdialenosť</span>
+                                <span className="text-sm text-blue-600">Vzdialenosť</span>
                                 <button
                                     onClick={() => setUseGPS(!useGPS)}
-                                    className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition"
+                                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition"
                                 >
                                     {useGPS ? '📍 GPS' : '✏️ Manual'}
                                 </button>
                             </div>
                             {useGPS ? (
-                                <div className="text-2xl font-mono font-bold">{gpsDistance.toFixed(3)} km</div>
+                                <div className="text-2xl font-mono font-bold text-gray-900">{gpsDistance.toFixed(3)} km</div>
                             ) : (
                                 <div className="flex items-center">
                                     <input
@@ -399,16 +399,16 @@
                                         onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
                                         step="0.1"
                                         min="0"
-                                        className="bg-white/20 text-white placeholder-green-200 border-0 rounded-lg px-2 py-1 w-20 text-xl font-bold mr-2 focus:bg-white/30 focus:outline-none"
+                                        className="bg-white border border-gray-300 text-gray-900 rounded-lg px-2 py-1 w-20 text-xl font-bold mr-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                     />
-                                    <span className="text-xl font-bold">km</span>
+                                    <span className="text-xl font-bold text-gray-900">km</span>
                                 </div>
                             )}
                         </div>
 
-                        <div className="bg-white/10 rounded-lg p-4">
-                            <div className="text-sm text-green-100 mb-1">Tempo</div>
-                            <div className="text-2xl font-mono font-bold">{calculatePace()}</div>
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <div className="text-sm text-blue-600 mb-1">Tempo</div>
+                            <div className="text-2xl font-mono font-bold text-gray-900">{calculatePace()}</div>
                         </div>
                     </div>
 
@@ -423,7 +423,7 @@
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Poznámky k aktivite..."
-                            className="w-full p-3 bg-white/10 text-white placeholder-green-200 rounded-lg border-0 focus:bg-white/20 focus:outline-none resize-none"
+                            className="w-full p-3 bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
                             rows="2"
                         />
                     </div>
