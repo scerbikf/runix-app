@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ActivityTracker from '../Components/ActivityTracker';
 
 function Activities() {
     const [activities, setActivities] = useState([]);
@@ -21,7 +22,12 @@ function Activities() {
     const fetchActivities = () => {
         axios.get('/activities')
             .then(response => {
-                setActivities(response.data);
+                // Ak response obsahuje activities pole, použijeme ho, inak celú odpoveď
+                if (response.data.activities) {
+                    setActivities(response.data.activities);
+                } else {
+                    setActivities(response.data);
+                }
             })
             .catch(error => {
                 console.error("There was an error fetching the activities!", error);
@@ -110,6 +116,9 @@ function Activities() {
 
     return (
         <div className="space-y-6">
+            {/* Activity Tracker */}
+            <ActivityTracker onTrackingUpdate={fetchActivities} />
+
             {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20">

@@ -16,7 +16,17 @@ class ActivityController extends Controller
      */
     public function index()
     {
-        return Auth::user()->activities()->orderBy('started_at', 'desc')->get();
+        $activities = Auth::user()->activities()->orderBy('started_at', 'desc')->get();
+        
+        // Pridáme informáciu o aktívnom trackingu
+        $activeTracking = Auth::user()->activities()
+            ->where('is_tracking', true)
+            ->first();
+            
+        return response()->json([
+            'activities' => $activities,
+            'activeTracking' => $activeTracking
+        ]);
     }
 
     /**
@@ -63,5 +73,107 @@ class ActivityController extends Controller
         $activity->delete();
 
         return response()->json(['message' => 'Activity deleted successfully'], 200);
+    }
+
+    /**
+     * Spustí tracking novej aktivity
+     */
+    public function startTracking(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        // Ukončí všetky aktívne tracking sessiony
+        Auth::user()->activities()
+            ->where('is_tracking', true)
+            ->update(['is_tracking' => false]);
+
+        $activity = Auth::user()->activities()->create([
+            'name' => $validated['name'],
+            'is_tracking' => true,
+            'tracking_started_at' => now(),
+            'started_at' => now(),
+            'distance' => 0,
+            'duration' => 0,
+            'current_distance' => 0,
+        ]);
+
+        return response()->json($activity, 201);
+    }
+
+    /**
+     * Ukončí aktívny tracking
+     */
+    public function stopTracking(Request $request)
+    {
+        $validated = $request->validate([
+            'distance' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $activity = Auth::user()->activities()
+            ->where('is_tracking', true)
+            ->first();
+
+        if (!$activity) {
+            return response()->json(['message' => 'No active tracking found'], 404);
+        }
+
+        // Aktualizuj vzdialenosť ak bola poskytnutá
+        if (isset($validated['distance'])) {
+            $activity->current_distance = $validated['distance'];
+        }
+
+        if (isset($validated['notes'])) {
+            $activity->notes = $validated['notes'];
+        }
+
+        $activity->stopTracking();
+
+        return response()->json($activity);
+    }
+
+    /**
+     * Aktualizuje aktuálnu vzdialenosť počas trackingu
+     */
+    public function updateTracking(Request $request)
+    {
+        $validated = $request->validate([
+            'distance' => 'required|numeric|min:0',
+        ]);
+
+        $activity = Auth::user()->activities()
+            ->where('is_tracking', true)
+            ->first();
+
+        if (!$activity) {
+            return response()->json(['message' => 'No active tracking found'], 404);
+        }
+
+        $activity->update([
+            'current_distance' => $validated['distance']
+        ]);
+
+        return response()->json($activity);
+    }
+
+    /**
+     * Získa aktuálny stav trackingu
+     */
+    public function getActiveTracking()
+    {
+        $activity = Auth::user()->activities()
+            ->where('is_tracking', true)
+            ->first();
+
+        if (!$activity) {
+            return response()->json(['message' => 'No active tracking'], 404);
+        }
+
+        // Vypočítaj aktuálne trvanie
+        $activity->current_duration = $activity->calculateDuration();
+
+        return response()->json($activity);
     }
 }

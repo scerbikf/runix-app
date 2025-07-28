@@ -31,6 +31,12 @@ Route::middleware('auth')->group(function () {
     Route::apiResource('activities', ActivityController::class)->parameters([
         'activities' => 'activity'
     ]);
+
+    // Tracking routes
+    Route::post('/activities/start-tracking', [ActivityController::class, 'startTracking'])->name('activities.start-tracking');
+    Route::post('/activities/stop-tracking', [ActivityController::class, 'stopTracking'])->name('activities.stop-tracking');
+    Route::post('/activities/update-tracking', [ActivityController::class, 'updateTracking'])->name('activities.update-tracking');
+    Route::get('/activities/active-tracking', [ActivityController::class, 'getActiveTracking'])->name('activities.active-tracking');
 });
 
 require __DIR__.'/auth.php';
