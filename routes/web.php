@@ -39,4 +39,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/activities/active-tracking', [ActivityController::class, 'getActiveTracking'])->name('activities.active-tracking');
 });
 
+
 require __DIR__.'/auth.php';
