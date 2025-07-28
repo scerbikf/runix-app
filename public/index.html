@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #f3e8ff 100%);
             min-height: 100vh;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
@@ -695,35 +695,67 @@
             };
 
             return (
-                <div className="min-h-screen py-6 sm:py-12">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-8">
-                            <div className="text-center flex-1">
-                                <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                                    🏃‍♂️ Runix
-                                </h1>
-                                <p className="text-xl text-white/80 mb-2">
-                                    Sports Activity Tracker
-                                </p>
-                                <p className="text-white/60">
-                                    Vítajte, {user?.name || 'používateľ'}!
-                                </p>
-                            </div>
-                            <div className="ml-4">
-                                <button
-                                    onClick={onLogout}
-                                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg backdrop-blur-md transition duration-200 flex items-center space-x-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                    <span>Odhlásiť</span>
-                                </button>
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+                    {/* Navigation */}
+                    <nav className="border-b border-white/20 bg-white/90 backdrop-blur-md shadow-lg">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                            <div className="flex h-16 justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <span className="ml-2 text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                        Runix
+                                    </span>
+                                </div>
+                                <div className="flex items-center">
+                                    <span className="text-gray-700 mr-4">Vítajte, {user?.name || 'používateľ'}!</span>
+                                    <button
+                                        onClick={onLogout}
+                                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Odhlásiť
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </nav>
 
-                        <div className="space-y-6">
+                    {/* Header */}
+                    <header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-white/20">
+                        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                        Moje Aktivity
+                                    </h2>
+                                    <p className="text-gray-600 mt-1">Sleduj svoje tréningy a dosiahni svoje ciele</p>
+                                </div>
+                                <div className="hidden sm:flex items-center space-x-4">
+                                    <div className="text-right">
+                                        <div className="text-sm text-gray-500">Dnešný dátum</div>
+                                        <div className="text-lg font-semibold text-gray-800">
+                                            {new Date().toLocaleDateString('sk-SK', { 
+                                                weekday: 'long', 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric' 
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="py-6 sm:py-12">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                             {/* Spustiť Button - only show if not tracking */}
                             {!isTracking && (
                                 <div className="flex justify-center">
@@ -1065,7 +1097,7 @@
                             onClose={() => setShowStartModal(false)}
                             onStart={startTracking}
                         />
-                    </div>
+                    </main>
                 </div>
             );
         }
@@ -1156,8 +1188,8 @@
 
             if (loading) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-white text-xl">Načítavam...</div>
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+                        <div className="text-gray-800 text-xl">Načítavam...</div>
                     </div>
                 );
             }
