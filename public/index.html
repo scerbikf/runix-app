@@ -755,10 +755,10 @@
 
                     {/* Main Content */}
                     <main className="py-6 sm:py-12">
-                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
                             {/* Spustiť Button - only show if not tracking */}
                             {!isTracking && (
-                                <div className="flex justify-center">
+                                <div className="flex justify-center mb-8">
                                     <button
                                         onClick={() => setShowStartModal(true)}
                                         className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 transform hover:scale-105"
@@ -769,14 +769,20 @@
                             )}
 
                             {/* Live Tracking Widget */}
-                            {isTracking && activeTracking && <TrackingWidget 
-                                activeTracking={activeTracking} 
-                                onStop={stopTracking}
-                                onUpdateDistance={updateTrackingDistance}
-                            />}
+                            {isTracking && activeTracking && (
+                                <div className="mb-8">
+                                    <TrackingWidget 
+                                        activeTracking={activeTracking} 
+                                        onStop={stopTracking}
+                                        onUpdateDistance={updateTrackingDistance}
+                                    />
+                                </div>
+                            )}
 
                             {/* Stats Overview */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <div className="mb-8">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-6">Prehľad štatistík</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20">
                                     <div className="flex items-center">
                                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -846,21 +852,24 @@
                             </div>
 
                             {/* Add Activity Button */}
-                            <div className="flex justify-center sm:justify-start">
-                                <button
-                                    onClick={() => setShowForm(!showForm)}
-                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 transform hover:scale-105"
-                                >
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showForm ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"} />
-                                    </svg>
-                                    {showForm ? 'Zrušiť' : 'Pridať aktivitu'}
-                                </button>
+                            <div className="mb-8">
+                                <div className="flex justify-center sm:justify-start">
+                                    <button
+                                        onClick={() => setShowForm(!showForm)}
+                                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 transform hover:scale-105"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showForm ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"} />
+                                        </svg>
+                                        {showForm ? 'Zrušiť' : 'Pridať aktivitu'}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Add Activity Form */}
                             {showForm && (
-                                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-lg border border-white/20">
+                                <div className="mb-8">
+                                    <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-lg border border-white/20">
                                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Pridať novú aktivitu</h2>
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -963,12 +972,13 @@
                                             </button>
                                         </div>
                                     </form>
+                                    </div>
                                 </div>
                             )}
 
                             {/* Activities List */}
-                            <div className="space-y-4">
-                                <h2 className="text-2xl font-bold text-white">Posledné aktivity</h2>
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Posledné aktivity</h2>
                                 
                                 {error && (
                                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -1097,6 +1107,7 @@
                             onClose={() => setShowStartModal(false)}
                             onStart={startTracking}
                         />
+                        </div>
                     </main>
                 </div>
             );
